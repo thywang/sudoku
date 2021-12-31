@@ -20,18 +20,21 @@ def is_possible(board, y, x, n):
 
     # check the row
     for j in range(0, 9):
-        if board[y][j] == n:
+        # second condition is to prevent checking where we want to place value in
+        if board[y][j] == n and x != j:
             return False
     # check the column
     for i in range(0, 9):
-        if board[i][x] == n:
+        # second condition is to prevent checking where we want to place value in
+        if board[i][x] == n and y != i:
             return False
     # check the square
     x1 = x + (3-x % 3)
     y1 = y + (3-y % 3)
     for i in range(y - y % 3, y1):
         for j in range(x - x % 3, x1):
-            if board[i][j] == n:
+            # second condition is to prevent checking where we want to place value in
+            if board[i][j] == n and (i,j) != (x,y):
                 return False
 
     # number is not in the row, column nor square
@@ -59,7 +62,7 @@ def solve(board):
 
 
 def print_board(board):
-    for y in range(8):
+    for y in range(9):
         min = 0
         max = 3
         while max <= 9:

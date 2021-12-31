@@ -60,4 +60,27 @@ class Cube:
         self.height = height
         self.selected = False
 
+# function to check if value is valid
+def is_valid(board, pos, n):
+    x = pos[0]
+    y = pos[1]
+    # check row
+    for i in range(9):
+        # second condition is to prevent checking where we want to place value in
+        if board[x][i] == n and y != i:
+            return False
+    # check column
+    for i in range(9):
+        if board[i][y] == n and x != i:
+            return False
+    # check square
+    x1 = x + (3-x % 3)
+    y1 = y + (3-y % 3)
+    for i in range(y - y % 3, y1):
+        for j in range(x - x % 3, x1):
+            if board[i][j] == n and (i,j) != pos:
+                return False
+
+    return True
+
 # def main():
