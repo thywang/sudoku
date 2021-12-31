@@ -28,8 +28,8 @@ class Grid:
         self.height = height
         self.rows = rows
         self.cols = cols
-        # 2-d list of cubes
-        self.cubes = [[Cube(self.board[i][j], i, j, width, height)
+        # 2-d list of cells
+        self.cells = [[Cell(self.board[i][j], i, j, width, height)
                        for i in range(rows)] for j in range(cols)]
         self.model = None
         # update model
@@ -41,14 +41,36 @@ class Grid:
     def update_model(self):
         self.model = [
             [self.board[i][j].value for i in range(self.rows)] for j in range(self.cols)]
-    # function to solve the current board
+    
+    # function that checks if the current board (with only the confirmed / entered values) can be solved
+    def solve(self):
+        found = search_empty(self.model)
+        if not found:
+            # board is solved
+            return True
+        else:
+            # empty position found
+            row, col = found
+
+        # check through 1 to 9 to see if any number(s) can go in
+        for i in range(1, 10):
+            if is_valid(self.model, (row, col), i):
+                self.model[row][col] = i
+
+                if self.solve():
+                    return True
+
+                self.model[row][col] = 0
+                    
+        return False
+        
     # function to sketch the guessed number
     # function to check if the number entered is correct
-    # function to place the entered number in the cube
-    # function to highlight a cube
+    # function to place the entered number in the cell
+    # function to highlight a cell
 
 
-class Cube:
+class Cell:
     # properties: value, temp, row (i.e. y), column (i.e. x), width, height, selected (boolean)
 
     def __init__(self, value, temp, row, col, width, height):
@@ -60,13 +82,21 @@ class Cube:
         self.height = height
         self.selected = False
 
+# function that searches for empty cell
+def search_empty(board):
+    for row in range(9):
+        for col in range(9):
+            if board[row][col] == 0:
+                return (row, col)
+    # no empty cells found
+    return None
+
 # function to check if value is valid
 def is_valid(board, pos, n):
     x = pos[0]
     y = pos[1]
     # check row
     for i in range(9):
-        # second condition is to prevent checking where we want to place value in
         if board[x][i] == n and y != i:
             return False
     # check column
