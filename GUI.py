@@ -65,9 +65,40 @@ class Grid:
         return False
         
     # function to sketch the guessed number
+    def sketch(self, val):
+        row, col = self.selected
+        self.cubes[row][col].temp = val
+
     # function to check if the number entered is correct
     # function to place the entered number in the cell
-    # function to highlight a cell
+    def place(self, val):
+        row, col = self.selected
+        # check if cell is empty
+        if self.cubes[row][col].value == 0:
+            # set the value
+            self.cubes[row][col].set(val)
+            # update model
+            self.update_model()
+            # if value is valid and board can be solved
+            if is_valid(self.model, (row, col), val) and self.solve():
+                return True
+            else:
+                # change back the value -- value doesn't work
+                self.cubes[row][col].set(0)
+                # update model
+                self.update_model()
+                return False
+
+    # function to select a cell
+    def select(self, row, col):
+        # reset all other cells
+        for i in range(self.rows):
+            for j in range(self.cols):
+                if self.cubes[i][j].selected:
+                    self.cubes[i][j].selected = False
+
+        self.cubes[row][col].selected = True
+        self.selected = row, col
 
 
 class Cell:
@@ -81,11 +112,15 @@ class Cell:
         self.width = width
         self.height = height
         self.selected = False
+    
+    # function that sets the value
+    def set(self, val):
+        self.value = val
 
 # function that searches for empty cell
 def search_empty(board):
-    for row in range(9):
-        for col in range(9):
+    for row in range(len(board)):
+        for col in range(len(board[0])):
             if board[row][col] == 0:
                 return (row, col)
     # no empty cells found
@@ -95,12 +130,12 @@ def search_empty(board):
 def is_valid(board, pos, n):
     x = pos[0]
     y = pos[1]
-    # check row
-    for i in range(9):
+    # check across the row
+    for i in range(len(board[0])):
         if board[x][i] == n and y != i:
             return False
-    # check column
-    for i in range(9):
+    # check down the column
+    for i in range(len(board)):
         if board[i][y] == n and x != i:
             return False
     # check square
