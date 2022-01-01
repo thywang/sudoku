@@ -1,5 +1,4 @@
 import pygame
-from pygame.constants import MOUSEBUTTONDOWN
 
 pygame.init()
 
@@ -54,7 +53,7 @@ class Grid:
     def solve(self):
         found = search_empty(self.model)
         if not found:
-            # board is solved
+            # board is full / solved
             return True
         else:
             # empty position found
@@ -62,12 +61,13 @@ class Grid:
 
         # check through 1 to 9 to see if any number(s) can go in
         for i in range(1, 10):
-            if is_valid(self.model, (row, col), i):
+            if is_valid(self.model, (col, row), i):
                 self.model[row][col] = i
 
                 if self.solve():
                     return True
 
+                # cannot solve, so change back to 0
                 self.model[row][col] = 0
                     
         return False
@@ -89,13 +89,14 @@ class Grid:
     # function that clears a cell
     def clear(self):
         row, col = self.selected
+        # if there's no confirmed value in the cell
         if self.cells[row][col].value == 0:
-            self.cells[row][col].temp = 0
+            self.cells[row][col].set_temp(0)
 
     # function to sketch the guessed number
-    def sketch(self, val):
+    def sketch(self, num):
         row, col = self.selected
-        self.cells[row][col].temp = val
+        self.cells[row][col].set_temp(num)
 
     # function to place the entered number in the cell (if possible)
     def place(self, val):
@@ -106,12 +107,15 @@ class Grid:
             self.cells[row][col].set(val)
             # update model
             self.update_model()
+
             # if value is valid and board can be solved
-            if is_valid(self.model, (row, col), val) and self.solve():
+            if is_valid(self.model, (col, row), val) and self.solve():
                 return True
             else:
                 # change back the value
                 self.cells[row][col].set(0)
+                # reset the temp
+                self.cells[row][col].set_temp(0)
                 # update model
                 self.update_model()
                 # value can't be placed
@@ -119,12 +123,13 @@ class Grid:
 
     # function to select a cell
     def select(self, row, col):
-        # reset all other cells
+        # reset all cells
         for i in range(self.rows):
             for j in range(self.cols):
                 if self.cells[i][j].selected:
                     self.cells[i][j].selected = False
-
+        
+        # select the specific cell
         self.cells[row][col].selected = True
         self.selected = row, col
 
@@ -139,11 +144,9 @@ class Grid:
             else:
                 line_width = 1
             # draw horizontal grid line
-            pygame.draw.line(self.win, BLACK, (start_x, start_y + i * GAP),
-                             (start_x + 9 * GAP, start_y + i * GAP), line_width)
+            pygame.draw.line(self.win, BLACK, (start_x, start_y + i * GAP), (start_x + 9 * GAP, start_y + i * GAP), line_width)
             # draw vertical grid line
-            pygame.draw.line(self.win, BLACK, (start_x + i * GAP, start_y),
-                             (start_x + i * GAP, start_y + 9 * GAP), line_width)
+            pygame.draw.line(self.win, BLACK, (start_x + i * GAP, start_y), (start_x + i * GAP, start_y + 9 * GAP), line_width)
 
         # draw the cells (write numbers inside cells)
         for i in range(self.rows):
@@ -165,16 +168,16 @@ class Cell:
     
     # function that draws the number in the cell
     def draw_num(self, win, start_x, start_y):
-        # i is the row
-        # j is column
         x = start_x + GAP * self.row
         y = start_y + GAP * self.col
+
         if self.temp != 0 and self.value == 0:
-            text = SKETCH_FONT.render(str(self.temp), 1, BLACK)
+            text = SKETCH_FONT.render(str(self.temp), 1, GRAY)
             win.blit(text, (x + 5, y + 5))
         elif self.value != 0:
             text = VALUE_FONT.render(str(self.value), 1, BLACK)
             win.blit(text, (x + (GAP - text.get_width()) / 2, y + (GAP - text.get_height()) / 2))
+        
         # draw thicker light blue border if selected
         if self.selected:
             pygame.draw.rect(win, LIGHT_BLUE, (x, y, GAP, GAP), 3)
@@ -182,6 +185,10 @@ class Cell:
     # function that sets the value
     def set(self, val):
         self.value = val
+
+    # function that sets the temporary value
+    def set_temp(self, temp):
+        self.temp = temp
 
 # function that searches for empty cell
 def search_empty(bo):
@@ -194,15 +201,17 @@ def search_empty(bo):
 
 # function to check if value is valid
 def is_valid(bo, pos, n):
+    # x is the column
     x = pos[0]
+    # y is the row
     y = pos[1]
     # check across the row
     for i in range(len(bo[0])):
-        if bo[x][i] == n and y != i:
+        if bo[y][i] == n and x != i:
             return False
     # check down the column
     for i in range(len(bo)):
-        if bo[i][y] == n and x != i:
+        if bo[i][x] == n and y != i:
             return False
     # check square
     x1 = x + (3-x % 3)
@@ -267,7 +276,7 @@ def main():
                             print("Correct!")
                     key = None
 
-            if event.type == MOUSEBUTTONDOWN:
+            if event.type == pygame.MOUSEBUTTONDOWN:
                 # get (x, y) position of mouse
                 pos = pygame.mouse.get_pos()
                 clicked = board.click(pos)
