@@ -1,4 +1,5 @@
 import pygame
+from pygame.constants import MOUSEBUTTONDOWN
 
 pygame.init()
 
@@ -71,12 +72,32 @@ class Grid:
                     
         return False
         
+    # function that returns the row and column of cell clicked
+    def click(self, pos):
+        start_x = (WIDTH - GRID_WIDTH) / 2
+        start_y = start_x + 10
+        x, y = pos
+        # if x and y within the board
+        if start_x < x < start_x + GRID_WIDTH and start_y < y < start_y + GRID_HEIGHT:
+            # get row and column
+            row = int((y - start_y) // GAP)
+            col = int((x - start_x) // GAP)
+            return (row, col)
+        else:
+            return None
+    
+    # function that clears a cell
+    def clear(self):
+        row, col = self.selected
+        if self.cells[row][col].value == 0:
+            self.cells[row][col].temp = 0
+
     # function to sketch the guessed number
     def sketch(self, val):
         row, col = self.selected
         self.cells[row][col].temp = val
 
-    # function to place the entered number in the cell
+    # function to place the entered number in the cell (if possible)
     def place(self, val):
         row, col = self.selected
         # check if cell is empty
@@ -208,10 +229,57 @@ def main():
     board = Grid(GRID_WIDTH, GRID_HEIGHT, rows, cols, win)
 
     running = True
+    key = None
+
     while (running):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1:
+                    key = 1
+                if event.key == pygame.K_2:
+                    key = 2
+                if event.key == pygame.K_3:
+                    key = 3
+                if event.key == pygame.K_4:
+                    key = 4
+                if event.key == pygame.K_5:
+                    key = 5
+                if event.key == pygame.K_6:
+                    key = 6 
+                if event.key == pygame.K_7:
+                    key = 7
+                if event.key == pygame.K_8:
+                    key = 8
+                if event.key == pygame.K_9:
+                    key = 9
+
+                if event.key == pygame.K_DELETE:
+                    board.clear()
+                    key = None
+                     
+                if event.key == pygame.K_RETURN:
+                    row, col = board.selected
+                    if board.cells[row][col].temp != 0:
+                        if board.place(board.cells[row][col].temp):
+                            print("Correct!")
+                    key = None
+
+            if event.type == MOUSEBUTTONDOWN:
+                # get (x, y) position of mouse
+                pos = pygame.mouse.get_pos()
+                clicked = board.click(pos)
+                # if a cell is clicked
+                if clicked:
+                    # clicked[0] is the row, clicked[1] is the column
+                    board.select(clicked[0], clicked[1])
+                    key = None
+        
+        if board.selected and key != None:
+            board.sketch(key)
+        
         win.fill(WHITE)
         board.draw()
         
