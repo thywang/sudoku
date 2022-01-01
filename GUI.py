@@ -1,5 +1,7 @@
 import pygame
 
+pygame.init()
+
 # constants
 WIDTH, HEIGHT = 540, 610
 GRID_WIDTH, GRID_HEIGHT = 450, 450
@@ -9,6 +11,12 @@ GAP = 50
 # colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+GRAY = (128, 128, 128)
+LIGHT_BLUE = (89, 221, 255)
+
+# fonts
+VALUE_FONT = pygame.font.SysFont('helveticaneue', 35)
+SKETCH_FONT = pygame.font.SysFont('helveticaneue', 15)
 
 
 class Grid:
@@ -102,22 +110,25 @@ class Grid:
     # function to draw the grid
     def draw(self):
         # draw grid lines
-        startx = (WIDTH - GRID_WIDTH) / 2
-        starty = startx + 10
+        start_x = (WIDTH - GRID_WIDTH) / 2
+        start_y = start_x + 10
         for i in range(self.rows + 1):
             if i % 3 == 0:
                 line_width = 3
             else:
                 line_width = 1
             # draw horizontal grid line
-            pygame.draw.line(self.win, BLACK, (startx, starty + i * GAP),
-                            (startx + 9 * GAP, starty + i * GAP), line_width)
+            pygame.draw.line(self.win, BLACK, (start_x, start_y + i * GAP),
+                             (start_x + 9 * GAP, start_y + i * GAP), line_width)
             # draw vertical grid line
-            pygame.draw.line(self.win, BLACK, (startx + i * GAP, starty),
-                            (startx + i * GAP, starty + 9 * GAP), line_width)
-        # draw the cells
-        
+            pygame.draw.line(self.win, BLACK, (start_x + i * GAP, start_y),
+                             (start_x + i * GAP, start_y + 9 * GAP), line_width)
 
+        # draw the cells (write numbers inside cells)
+        for i in range(self.rows):
+            for j in range(self.cols):
+                self.cells[i][j].draw_num(self.win, start_x, start_y)
+                
 
 class Cell:
     # properties: value, temp, row (i.e. y), column (i.e. x), width, height, selected (boolean)
@@ -131,11 +142,21 @@ class Cell:
         self.height = height
         self.selected = False
     
-    # function that draws a cell
-    def draw(self, win):
-        pygame.draw.rect(win, BLACK, (2, 2, self.width, self.height), 1)
-        # regular black border
-        # thicker light blue border if selected
+    # function that draws the number in the cell
+    def draw_num(self, win, start_x, start_y):
+        # i is the row
+        # j is column
+        x = start_x + GAP * self.row
+        y = start_y + GAP * self.col
+        if self.temp != 0 and self.value == 0:
+            text = SKETCH_FONT.render(str(self.temp), 1, BLACK)
+            win.blit(text, (x + 5, y + 5))
+        elif self.value != 0:
+            text = VALUE_FONT.render(str(self.value), 1, BLACK)
+            win.blit(text, (x + (GAP - text.get_width()) / 2, y + (GAP - text.get_height()) / 2))
+        # draw thicker light blue border if selected
+        if self.selected:
+            pygame.draw.rect(win, LIGHT_BLUE, (x, y, GAP, GAP), 3)
 
     # function that sets the value
     def set(self, val):
@@ -181,7 +202,6 @@ def main():
     rows = 9
     cols = 9
 
-    pygame.init()
     win = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Sudoku!")
 
