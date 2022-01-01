@@ -19,25 +19,6 @@ VALUE_FONT = pygame.font.SysFont('helveticaneue', 35)
 SKETCH_FONT = pygame.font.SysFont('helveticaneue', 15)
 
 
-def print_board(board):
-    for y in range(9):
-        min = 0
-        max = 3
-        while max <= 9:
-            print("| ", end=" ")
-            for x in range(min, max):
-                if (not(board[y][x])):
-                    print("- ", end=" ")
-                else:
-                    print("%d " % (board[y][x]), end=" ")
-            min = max
-            max += 3
-        print("|")
-        if y + 1 < 9 and (y + 1) % 3 == 0:
-            for i in range(19):
-                print("-", end=" ")
-            print()
-
 class Grid:
     board = [[5, 3, 0, 0, 7, 0, 0, 0, 0],
              [6, 0, 0, 1, 9, 5, 0, 0, 0],
@@ -305,7 +286,6 @@ def main():
                      
                 if event.key == pygame.K_RETURN:
                     row, col = board.selected
-                    print(row, col)
                     if board.cells[row][col].temp != 0:
                         if board.place(board.cells[row][col].temp):
                             print("Correct!")
