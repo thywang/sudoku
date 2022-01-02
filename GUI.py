@@ -13,6 +13,7 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GRAY = (128, 128, 128)
 LIGHT_BLUE = (89, 221, 255)
+RED = (255, 0, 0)
 
 # fonts
 VALUE_FONT = pygame.font.SysFont('helveticaneue', 35)
@@ -92,6 +93,46 @@ class Grid:
                 # cannot solve, so change back to 0
                 self.model[row][col] = 0
                     
+        return False
+
+    # function that solves the board with animation
+    def gui_solve(self):
+        start_x = (WIDTH - GRID_WIDTH) / 2
+        start_y = start_x + 10
+        # uses just the model
+        self.update_model()
+        found = search_empty(self.model)
+        if not found:
+            # board is full / solved
+            return True
+        else:
+            # empty position found
+            row, col = found
+
+        # check through 1 to 9 to see if any number(s) can go in
+        for i in range(1, 10):
+            if is_valid(self.model, (row, col), i):
+                self.model[row][col] = i
+                self.cells[row][col].set(i)
+                # assume it's true
+                self.cells[row][col].draw_change(self.win, start_x, start_y, True)
+                self.update_model()
+                pygame.display.update()
+                pygame.time.delay(100)
+
+                if self.gui_solve():
+                    return True
+
+                # cannot solve, so change back to 0
+                self.model[row][col] = 0
+                self.cells[row][col].set(0)
+                self.update_model()
+                # it's false
+                self.cells[row][col].draw_change(self.win, start_x, start_y, False)
+                pygame.display.update()
+                pygame.time.delay(100)
+
+
         return False
         
     # function that checks if the board is full
@@ -197,6 +238,25 @@ class Cell:
         if self.selected:
             pygame.draw.rect(win, LIGHT_BLUE, (x, y, GAP, GAP), 3)
 
+    # function that draws the change of a cell
+    def draw_change(self, win, start_x, start_y, correct=True):
+        x = start_x + GAP * self.col
+        y = start_y + GAP * self.row
+
+        # cover up the cell
+        pygame.draw.rect(win, WHITE, (x, y, GAP, GAP), 0)
+
+        # write value
+        text = VALUE_FONT.render(str(self.value), 1, BLACK)
+        win.blit(text, (x + (GAP - text.get_width()) / 2, y + (GAP - text.get_height()) / 2))
+
+        # correct -- draw light blue border
+        if correct:
+            pygame.draw.rect(win, LIGHT_BLUE, (x, y, GAP, GAP), 3)
+        # incorrect -- draw red border
+        else:
+            pygame.draw.rect(win, RED, (x, y, GAP, GAP), 3)
+
     # function that sets the value
     def set(self, val):
         self.value = val
@@ -251,7 +311,6 @@ def main():
     pygame.display.set_caption("Sudoku!")
 
     board = Grid(GRID_WIDTH, GRID_HEIGHT, rows, cols, win)
-
     running = True
     key = None
 
@@ -298,6 +357,8 @@ def main():
                     key = 8
                 if event.key == pygame.K_KP9:
                     key = 9
+                if event.key == pygame.K_s:
+                    board.gui_solve()
 
                 if event.key == pygame.K_DELETE:
                     board.clear()
