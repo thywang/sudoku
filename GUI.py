@@ -314,6 +314,11 @@ def main():
     running = True
     key = None
 
+    # control how fast the screen updates
+    clock = pygame.time.Clock()
+    frame_count = 0
+    FPS = 60
+
     while (running):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -394,8 +399,27 @@ def main():
             board.sketch(key)
         
         win.fill(WHITE)
+
+        # "stopwatch"
+        # calculate total seconds
+        total_seconds = frame_count // FPS
+        # divide by 60 to get total minutes
+        minutes = total_seconds // 60
+        # use modulus to get seconds
+        seconds = total_seconds % 60
+        # use string formatting to format in leading zeroes
+        output = "{0:02}:{1:02}".format(minutes, seconds)
+
+        # render and blit
+        text = VALUE_FONT.render(output, True, BLACK)
+        win.blit(text, [400, 530])
+
+        frame_count += 1
+
+        # limit frames per second
+        clock.tick(FPS)
+
         board.draw()
-        
         pygame.display.update()
 
 main()
